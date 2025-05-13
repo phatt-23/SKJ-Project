@@ -1,0 +1,15 @@
+{% extends 'web/layout.html' %}
+
+{% block title %}
+    {{ owner.username }}/{{ repo.name }}
+{% endblock %}
+
+{% block content %}
+
+    <h1><a href="{% url 'user_page' username=owner.username  %}">{{ owner.username }}</a>/{{ repo.name }}</h1>
+
+    <p>
+        {{repo.description}}
+    </p>
+
+{% endblock %}

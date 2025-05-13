@@ -1,0 +1,17 @@
+{% extends 'web/layout.html' %}
+
+{% block title %}Logout{% endblock %}
+
+{% block content %}
+
+<h1>
+    Do you really want to sign out?
+</h1>
+
+
+<form method="POST">
+    {% csrf_token %} 
+    <button type="submit" class="btn btn-danger">Sign out</button>
+</form>
+
+{% endblock %}

@@ -1,0 +1,16 @@
+{% extends 'web/layout.html' %}
+
+{% block title %}Dashboard{% endblock %}
+
+{% block content %}
+
+<h1>Dashboard</h1>
+
+<p>
+    You are <b>{{user.username}}</b>
+    and your email is <b>{{user.email}}</b>
+</p>
+
+<p>Here goes dashboard stuff...</p>
+
+{% endblock %}

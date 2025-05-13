@@ -1,0 +1,15 @@
+from django.urls import path
+from .views import common as common_view
+from .views import auth as auth_view
+from .views import user as user_view
+from .views import repo as repo_view
+
+urlpatterns = [
+    path('', common_view.index, name='index'),
+    path('login/', auth_view.login_view, name='login'),
+    path('register/', auth_view.register_view, name='register'),
+    path('logout/', auth_view.logout_view, name='logout'),
+    path('dashboard/', common_view.dashboard, name='dashboard'),
+    path('user/<str:username>', user_view.user_page, name='user_page'),
+    path('user/<str:username>/<str:repo_name>', repo_view.repo_page, name='repo_page'),
+]

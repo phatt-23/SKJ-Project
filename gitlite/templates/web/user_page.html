@@ -1,0 +1,26 @@
+{% extends 'web/layout.html' %}
+
+{% block title %}
+    {{pub_user.username}}
+{% endblock %}
+
+{% block content %}
+
+<h1>{{pub_user.username}}</h1>
+
+<p>This is a public page of <b>{{pub_user.username}}</b></p>
+
+{% for repo in repos %}
+<div class="card">
+    <div class="card-body">
+        <h5 class="card-title">
+            <a href="{% url 'repo_page' username=pub_user.username repo_name=repo.name %}">{{repo.name}}</a>
+        </h5>
+        <p class="card-text">
+            {{repo.description}}
+        </p>
+    </div>
+</div>
+{% endfor %}
+
+{% endblock %}
