@@ -4,14 +4,15 @@
 
 {% block content %}
 
-<h1>
-    Do you really want to sign out?
-</h1>
+<h2>Sign Out</h2>
 
+<p>
+  Do you really want to sign out?
+</p>
 
 <form method="POST">
-    {% csrf_token %} 
-    <button type="submit" class="btn btn-danger">Sign out</button>
+  {% csrf_token %} 
+  <button type="submit" class="btn btn-danger">Sign out</button>
 </form>
 
 {% endblock %}

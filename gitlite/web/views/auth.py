@@ -8,10 +8,19 @@ User = get_user_model()
 
 def login_view(request: HttpRequest):
     if request.method == 'POST':
-        username = request.POST.get('username')
+        username_or_email = request.POST.get('username_or_email')
         password = request.POST.get('password')
 
-        user = authenticate(request, username=username, password=password)
+        if '@' in str(username_or_email):
+            user_with_email = User.objects.get(email=username_or_email)
+            user = authenticate(
+                request, 
+                username=user_with_email.username, 
+                password=password
+            ) if user_with_email else None
+        else:
+            user = authenticate(request, username=username_or_email, password=password)
+
         if user is not None:
             login(request, user)
             return redirect('dashboard')
@@ -46,6 +55,11 @@ def register_view(request: HttpRequest):
             user = User.objects.create_user(username=username, email=email, password=password1)
             login(request, user)
             return redirect('dashboard')
+
+        return render(request, 'registration/register.html', {
+            'username': username,
+            'email': email,
+        })
 
     return render(request, 'registration/register.html')
 

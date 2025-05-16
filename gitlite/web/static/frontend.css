@@ -1,0 +1,22 @@
+
+.navbar .breadcrumb {
+    --bs-breadcrumb-divider: '>';
+    --bs-breadcrumb-divider-color: var(--bs-secondary);
+    margin-bottom: 0;
+    padding: 0; 
+    background: transparent;    
+}
+
+.navbar .breadcrumb-item a {
+    color: var(--bs-secondary);
+    text-decoration: none;
+    transition: color 0.1s ease-in;
+}
+
+.navbar .breadcrumb-item a:hover {
+    color: var(--bs-light);
+}
+
+.navbar .breadcrumb-item.active a {
+    color: var(--bs-light);
+}

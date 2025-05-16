@@ -10,10 +10,8 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/5.2/ref/settings/
 """
 
+import os
 from pathlib import Path
-
-
-AUTH_USER_MODEL = 'common.User'
 
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -22,6 +20,12 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/5.2/howto/deployment/checklist/
+
+
+AUTH_USER_MODEL = 'common.User'
+MEDIA_URL = '/media/'
+MEDIA_ROOT = BASE_DIR / 'media'
+
 
 # SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = 'django-insecure-lag1p@mb&2s30g^1p0gy$9gkbp4)371t*!!t--p6x(9o$*3i7('
