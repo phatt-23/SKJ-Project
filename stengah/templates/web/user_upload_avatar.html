@@ -1,0 +1,24 @@
+{% extends 'web/layout.html' %}
+
+{% block title %}Upload Avatar{% endblock %}
+
+{% block content %}
+
+
+
+<form method="POST" enctype="multipart/form-data"
+  class="card p-4 shadow-sm mx-auto" 
+  style="max-width: 600px;"
+>
+  {% csrf_token %}
+  <h2 class="mb-4">Upload avatar</h2>
+
+  <input type="file" name="avatar" class="form-control mb-3" required>
+ 
+  <div class="form-group d-flex justify-content-end gap-2">
+    <button type="submit" class="btn btn-primary">Upload</button>
+    <a class="btn btn-outline-danger" href="{% url 'user_page' username=user.username %}">Cancel</a>
+  </div>
+</form>
+
+{% endblock %}

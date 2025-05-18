@@ -1,0 +1,134 @@
+{% extends 'web/layout.html' %}
+{% load filters %}
+
+{% block title %}
+  {{ owner.username }}/{{ repo.name }} - Issues
+{% endblock %}
+
+{% block breadcrumbs %}
+<ol class="breadcrumb mb-0 bg-dark">
+  <li class="breadcrumb-item">
+    <a href="{% url 'user_page' username=owner.username %}">{{ owner.username }}</a>
+  </li>
+  <li class="breadcrumb-item">
+    <a href="{% url 'user_repo_list' username=owner.username %}">repos</a>
+  </li>
+  <li class="breadcrumb-item">
+    <a href="{% url 'repo_page' username=owner.username repo_name=repo.name %}">{{ repo.name }}</a>
+  </li>
+  <li class="breadcrumb-item active">
+    <a href="#">issues</a>
+  </li>
+</ol>
+{% endblock breadcrumbs %}
+
+{% block content %}
+
+  <h2>Issues for {{ owner.username }}/{{ repo.name }}</h2>
+
+<div class="row mb-4">
+  <form method="GET" role="search" class="{{ user.is_authenticated|yesno:"col-sm-10,col-sm-12" }}">
+    <div class="row g-2">
+      <div class="col-md-6">
+        <div class="form-floating">
+          <input name="q" value="{{ query }}" id="q" type="text" class="form-control" placeholder="Search">
+          <label for="q">Find an issue...</label>
+        </div>
+      </div>
+
+      <div class="col-sm-2">
+        <button type="button" data-bs-toggle="dropdown"
+          class="dropdown-toggle form-control btn btn-outline-secondary text-start p-3"
+        >
+          Status 
+        </button>
+        <ul class="dropdown-menu">
+          <li><span class="dropdown-item-text">Status</span></li>
+          <li><hr class="dropdown-divider"></li>
+          <li><button class="dropdown-item" type="submit" name="status" value="none">Open & Closed</button></li>
+          <li><button class="dropdown-item" type="submit" name="status" value="open">Open</button></li>
+          <li><button class="dropdown-item" type="submit" name="status" value="closed">Closed</button></li>
+        </ul>
+      </div>
+
+      <div class="col-sm-2">
+        <button type="button" data-bs-toggle="dropdown"
+          class="dropdown-toggle form-control btn btn-outline-secondary text-start p-3"
+        >
+          Order by 
+        </button>
+        <ul class="dropdown-menu">
+          <li><span class="dropdown-item-text">Select order</span></li>
+          <li><hr class="dropdown-divider"></li>
+          <li><button class="dropdown-item" type="submit" name="order_by" value="last_active">Last active</button></li>
+          <li>
+            <button class="dropdown-item" type="submit" name="order_by" value="created_at">Created at</button>
+          </li>
+        </ul>
+      </div>
+
+      <div class="col-sm-2">
+        <button type="button" data-bs-toggle="dropdown"
+          class="dropdown-toggle form-control btn btn-outline-secondary text-start p-3"
+        >
+          Sort 
+        </button>
+        <ul class="dropdown-menu">
+          <li><span class="dropdown-item-text">Select order</span></li>
+          <li><hr class="dropdown-divider"></li>
+          <li><button class="dropdown-item" type="submit" name="sort" value="asc">Ascending</button></li>
+          <li>
+            <button class="dropdown-item" type="submit" name="sort" value="desc">Descending</button>
+          </li>
+        </ul>
+      </div>
+    </div>
+  </form>
+  {% if user.is_authenticated %}
+    <div class="col-sm-2 text-md-end">
+      <a href="{% url 'repo_issue_create' username=owner.username repo_name=repo.name %}" class="btn btn-success w-100 p-3">
+        <i class="bi bi-plus-lg me-1"></i> Open issue
+      </a>
+    </div>
+  {% endif %}
+</div>
+
+<hr class="my-4">
+
+<ul class="list-group list-group-flush">
+  {% for issue in issues %}
+    <li class="list-group-item d-flex justify-content-between">
+      <div>
+        <h5>
+          <span class="badge {{ issue.is_open|yesno:"text-bg-warning,text-bg-success" }} me-2">
+            <i class="bi {{ issue.is_open|yesno:"bi-circle,bi-check-circle" }} me-1"></i>
+            {{ issue.is_open|yesno:"Open,Closed" }}
+          </span>
+          <a href="{% url 'repo_issue_detail' username=owner.username repo_name=repo.name issue_id=issue.id %}"
+            class="text-decoration-none me-2"
+          >
+            {{ issue.title }}
+          </a>
+        </h5>
+        <small>
+          <a class="text-decoration-none " href="{% url 'user_page' username=issue.created_by.username %}">
+            {{ issue.created_by.username }} 
+          </a>
+          {% if issue.status == 'open' %}
+            opened {{ issue.created_at|last_updated_fmt }}
+          {% else %}
+            closed {{ issue.closed_at|last_updated_fmt }}
+          {% endif %}
+        </small>
+      </div>
+      <div>
+        <i class="bi bi-chat-left-quote me-2"></i>
+        {{ issue.comments.count }} {% if issue.comments.count == 1 %}comment{% else %}comments{% endif %} 
+      </div>
+    </li>
+  {% empty %}
+    <p class="alert alert-info">No issues found.</p>
+  {% endfor %}
+</ul>
+
+{% endblock %}

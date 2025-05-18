@@ -1,0 +1,54 @@
+{% extends 'web/layout.html' %}
+
+{% block title %}
+  {{repo.owner.username}}/{{repo.name}} - Open Issue
+{% endblock %}
+
+{% block breadcrumbs %}
+<ol class="breadcrumb mb-0 bg-dark">
+  <li class="breadcrumb-item">
+    <a href="{% url 'user_page' username=owner.username %}">{{ owner.username }}</a>
+  </li>
+  <li class="breadcrumb-item">
+    <a href="{% url 'user_repo_list' username=owner.username %}">repos</a>
+  </li>
+  <li class="breadcrumb-item">
+    <a href="{% url 'repo_page' username=owner.username repo_name=repo.name %}">{{ repo.name }}</a>
+  </li>
+  <li class="breadcrumb-item">
+    <a href="{% url 'repo_issue_list' username=owner.username repo_name=repo.name %}">issues</a>
+  </li>
+  <li class="breadcrumb-item active">
+    <a href="#">create</a>
+  </li>
+</ol>
+{% endblock breadcrumbs %}
+
+{% block content %}
+  <form method="POST" class="card p-4 shadow-sm mx-auto" style="max-width: 800px;">
+    {% csrf_token %}
+    <h3 class="mb-4">
+      Open a new issue for 
+      <a href="{% url 'user_page' username=repo.owner.username %}">{{ repo.owner.username }}</a>/<a href="{% url 'repo_page' username=repo.owner.username repo_name=repo.name %}">{{ repo.name }}</a>
+    </h3>
+
+    <div class="form-floating mb-2">
+      <input type="text" name="title" class="form-control" placeholder required>
+      <label for="title" class="form-title">Title</label>
+    </div>
+
+    <div class="form-floating mb-2">
+      <textarea class="form-control" name="description" style="height: 120px;" placeholder="Enter description"></textarea>
+      <label for="description" class="form-label">Description</label>
+    </div>
+
+    <div class="d-flex justify-content-end gap-2 mt-2">
+      <button type="submit" class="btn btn-primary">
+        <i class="bi bi-write"></i> Open issue
+      </button>
+      <a class="btn btn-outline-danger" href="{% url 'repo_page' username=owner.username repo_name=repo.name %}">
+        Cancel
+      </a>
+    </div>
+  </form>
+{% endblock %}

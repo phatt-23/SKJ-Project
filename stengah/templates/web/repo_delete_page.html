@@ -1,0 +1,26 @@
+{% extends 'web/layout.html' %}
+
+{% block title %}
+{% endblock %}
+
+{% block breadcrumbs %}
+{% endblock %}
+
+{% block content %}
+<form method="POST"
+  class="card p-4 shadow-sm mx-auto" 
+  style="max-width: 600px;"
+>
+  <h2 class="mb-4">Delete repository <a href="{% url 'repo_page' username=owner.username repo_name=repo.name %}">{{ repo.name }}</a></h2>
+
+  {% csrf_token %}
+  
+  <p>Do you really want to delete this repository?</p>
+
+  <div class="d-flex justify-content-end gap-2">
+    <a class="btn btn-primary ms-1" href={% url 'repo_page' username=owner.username repo_name=repo.name %}>Cancel</a>
+    <button type="submit" class="btn btn-outline-danger">Delete</button>
+  </div>
+</form>
+{% endblock %}
+

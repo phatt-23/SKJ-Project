@@ -1,0 +1,60 @@
+{% extends 'web/layout.html' %}
+{% load filters %}
+{% load static %}
+
+{% block title %}
+  Commit Detail
+{% endblock %}
+
+{% block breadcrumbs %}
+<ol class="breadcrumb mb-0 bg-dark">
+  <li class="breadcrumb-item">
+    <a href="{% url 'user_page' username=owner.username %}">{{ owner.username }}</a>
+  </li>
+  <li class="breadcrumb-item active">
+    <a href="{% url 'repo_page' username=owner.username repo_name=repo.name %}">{{ repo.name }}</a>
+  </li>
+  <li class="breadcrumb-item active">
+    <a href="{% url 'repo_commit_list' username=owner.username repo_name=repo.name %}">commits</a>
+  </li>
+  <li class="breadcrumb-item active">
+    <a href="#">{{ commit.id }}</a>
+  </li>
+</ol>
+{% endblock breadcrumbs %}
+
+{% block content %}
+
+  <h2>Commit for {{repo.name}}</h2>
+   
+  <p class="lead">
+    Commited on <em>{{ commit.timestamp }}</em> 
+    with message: <b>{{ commit.message }}</b>
+  </p>
+
+  <ul class="list-group">
+  {% for file in files %}
+    <li class="list-group-item">
+      <span class="d-flex justify-content-between">
+        <a 
+          class="text-decoration-none me-2" type="button" 
+          data-bs-toggle="collapse" data-bs-target="#file-content-{{ forloop.counter0 }}"
+        >
+          {{ file.path }} 
+        </a>
+        <span class="text-muted">{{ file.size_kb|floatformat:2 }} KB <small>({{ file.size_bytes }} bytes)</small></span>
+      </span>
+      <div class="collapse mt-2" id="file-content-{{ forloop.counter0 }}">
+        <div class="card card-body"><pre><code class="language-{{ file.path|language_by_ext }}">{{ file.content }}</code></pre></div>
+      </div>
+    </li>
+  {% endfor %}
+  </ul>
+
+{% endblock %}
+
+{% block script %}
+  <script>
+    hljs.highlightAll();
+  </script>
+{% endblock %}

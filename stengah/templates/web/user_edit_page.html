@@ -1,0 +1,81 @@
+{% extends 'web/layout.html' %}
+{% load filters %}
+
+{% block title %}User Edit{% endblock %}
+
+{% block content %}
+
+<form 
+  method="POST" enctype="multipart/form-data" 
+  class="card p-4 shadow-sm mx-auto" 
+  style="max-width: 600px;"
+>
+  {% csrf_token %}
+
+  <h4 class="mb-4">Update Profile</h4>
+
+  <div class="row mb-3">
+    <div class="col-sm-5 d-flex align-items-center justify-content-center">
+      <img id="avatar-img"
+        src="{{ pub_user|avatar_url }}"
+        width="200" height="200"
+        alt="Avatar"
+        class="rounded-circle object-fit-cover"
+      >
+    </div>
+  
+    <div class="col-sm-7">
+      <label for="avatar" class="form-label fw-semibold">Choose Avatar</label>
+      <input id="avatar-input" type="file" name="avatar" class="form-control">
+      <p class="form-text">PNG or JPEG. Max size: 2MB.</p>
+
+      <input name="remove_avatar" id="remove-avatar-chk" type="checkbox" class="btn-check" autocomplete="off">
+      <label for="remove-avatar-chk" class="btn btn-outline-danger">Remove avatar</label>
+    </div>
+  </div>
+
+  <div class="form-floating mb-3">
+    <input name="email" value="{{ pub_user.email }}" type="email" class="form-control" placeholder required>
+    <label for="email">Email</label>
+  </div>
+
+
+  <div class="form-floating mb-3">
+    <textarea name="bio"  class="form-control" rows="3" style="height: 150px" placeholder>{{ pub_user.bio }}</textarea>
+    <label for="bio" class="form-label">Bio</label>
+    <p class="form-text">Tell others something about yourself.</p>
+  </div>
+
+  <div class="d-flex justify-content-end gap-2">
+    <button type="submit" class="btn btn-primary"><i class="bi bi-save me-2"></i> Save Changes</button>
+    <a href="{% url 'user_page' username=pub_user.username %}" class="btn btn-outline-danger">Cancel</a>
+  </div>
+</form>
+
+{% endblock %}
+
+{% block script %}
+
+<script>
+  const avatarInput = $('#avatar-input')[0]
+  const avatarImg = $('#avatar-img')[0]
+  const removeCheckbox = $('#remove-avatar-chk')[0]
+
+  removeCheckbox.addEventListener('change', () => showImg(!removeCheckbox.checked))
+
+  avatarInput.addEventListener('change', (e) => {
+    const file = e.target.files[0]
+    if (!file) return
+
+    const reader = new FileReader()
+    reader.onload = (er) => { 
+      avatarImg.onload = () => showImg(true)  // run when image if fully loaded 
+      avatarImg.src = er.target.result
+      removeCheckbox.checked = false  // remove check when image is chosen
+    }
+
+    reader.readAsDataURL(file)
+  })
+</script>
+
+{% endblock %}

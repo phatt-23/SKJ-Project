@@ -1,0 +1,48 @@
+{% extends 'web/layout.html' %}
+
+{% block title %}User Edit{% endblock %}
+
+{% block content %}
+
+<form 
+  method="POST" enctype="multipart/form-data" 
+  class="card p-4 shadow-sm mx-auto" 
+  style="max-width: 600px;"
+>
+  {% csrf_token %}
+
+  <h4 class="mb-4">Edit repository</h4>
+
+  <div class="form-floating mb-3">
+    <input name="name" value="{{ repo.name }}" type="text" class="form-control" placeholder required>
+    <label for="name">Repository name</label>
+  </div>
+
+  <div class="form-floating mb-3">
+    <textarea name="description"  class="form-control" rows="3" style="height: 150px" placeholder>{{ repo.description }}</textarea>
+    <label for="description" class="form-label">Description</label>
+    <p class="form-text">Describe what this repository is.</p>
+  </div>
+
+  <div class="form-group mb-3">
+    <div class="form-check">
+      <input class="form-check-input" type="radio" id="vis_public" name="visibility" value="public" {% if repo.is_public %}checked{% endif %}>
+      <label class="form-check-label" for="vis_public">
+        Public <p class="text-sm text-muted"><small>Anyone on the internet can see this repository.</small></p>
+      </label>
+    </div>
+    <div class="form-check">
+      <input class="form-check-input" type="radio" id="vis_private" name="visibility" value="private" {% if not repo.is_public %}checked{% endif %}>
+      <label class="form-check-label" for="vis_private">
+        Private <p class="text-muted"><small>Only you can see this repository.</small></p>
+      </label>
+    </div>
+  </div>
+
+  <div class="d-flex justify-content-end gap-2">
+    <button type="submit" class="btn btn-primary"><i class="bi bi-save me-2"></i> Save changes</button>
+    <a href="{% url 'repo_page' username=owner.username repo_name=repo.name %}" class="btn btn-outline-danger">Cancel</a>
+  </div>
+</form>
+
+{% endblock %}

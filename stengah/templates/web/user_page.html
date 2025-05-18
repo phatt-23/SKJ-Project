@@ -1,0 +1,98 @@
+{% extends 'web/layout.html' %}
+{% load filters %}
+
+{% block title %}{{ pub_user.username }}{% endblock %}
+
+{% block breadcrumbs %}
+<ol class="breadcrumb mb-0">
+  <li class="breadcrumb-item active">
+    <a class="rounded" href="#">{{ pub_user.username }}</a>
+  </li>
+</ol>
+{% endblock %}
+
+{% block content %}
+
+<div class="d-flex align-items-center mb-4">
+
+  <div class="d-flex  align-items-center me-4">
+    {% if is_my_page %}
+      <a href="{% url 'user_upload_avatar' username=pub_user.username %}" 
+        class="text-decoration-none text-black" 
+        data-bs-toggle="tooltip" 
+        data-bs-placement="bottom" 
+        data-bs-title="Change avatar"
+      >
+    {% endif %}
+  
+    <img src="{{ pub_user|avatar_url }}" 
+      class="rounded-circle object-fit-cover" 
+      alt="Avatar" width="200" height="200" 
+    > 
+
+    {% if is_my_page %}
+      </a>
+    {% endif %}
+  </div>
+  
+  <div class="d-flex align-items-center">
+    <h1 class="display-5 mb-0 me-4">{{ pub_user.username }}</h1>
+
+    {% if is_my_page %}
+      <a href="{% url 'user_edit_page' username=user.username %}" 
+        class="btn btn-outline-dark"
+      >
+        Edit Profile
+      </a>
+    {% endif %}
+  </div>
+</div>
+
+<p class="lead">
+  {% if pub_user.bio %}
+    {{ pub_user.bio }}
+  {% else %}
+    This user hasn't provided a bio.
+  {% endif %}
+</p>
+
+<hr class="my-4">
+
+<h2 class="mb-4">
+  <a href="{% url 'user_repo_list' username=pub_user.username %}"
+    class="text-decoration-none"
+  >
+    Repositories
+  </a>
+</h2>
+
+<div class="row row-cols-1 row-cols-md-2 g-4">
+  {% for repo in repos %}
+    <div class="col">
+      <div class="card shadow-sm">
+        <div class="card-body">
+          <div class="d-flex justify-content-between align-items-center mb-2">
+            <h5 class="card-title mb-0">
+              <a href="{% url 'repo_page' username=pub_user.username repo_name=repo.name %}"
+                class="text-decoration-none" 
+              >
+                {{ repo.name }}
+              </a>
+            </h5>
+            <span class="badge {% if repo.is_public %}bg-success{% else %}bg-secondary{% endif %}">
+              {% if repo.is_public %}Public{% else %}Private{% endif %}
+            </span>
+          </div>
+          <p class="card-text text-muted">
+            {{ repo.description|default:"No description provided." }}
+          </p>
+        </div>
+      </div>
+    </div>
+  {% empty %}
+      <p class="text-muted">This user has no repositories.</p>
+  {% endfor %}
+</div>
+
+{% endblock %}
+

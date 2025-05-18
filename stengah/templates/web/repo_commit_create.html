@@ -1,0 +1,281 @@
+{% extends 'web/layout.html' %}
+
+{% block title %}
+  Create commit
+{% endblock %}
+
+{% block content %}
+
+<div id="app">
+  <div class="card p-4 shadow-sm">
+    <h3 class="mb-4">
+      Create a new commit for 
+      <a href="{% url 'repo_page' username=owner.username repo_name=repo.name %}">{{ repo.name }}</a>
+    </h3>
+      
+    <div class="mb-3">
+      <label for="message" class="form-label">Commit message</label>
+      <input id="message"
+        class="form-control"
+        type="text"
+        name="message"
+        placeholder="Describe your changes"
+        ref="messageInput"
+        required
+      >
+    </div>
+
+    <div class="row mb-3 g-3">
+      <div class="col-md-6">
+        <label for="files" class="form-label">Select files</label>
+        <input type="file" multiple
+          class="form-control"
+          ref="fileInputFiles"
+          name="files"
+          @change="selectFiles"
+        >
+      </div>
+
+      <div class="col-md-6">
+        <label for="folder" class="form-label">Select a folder</label>
+        <input type="file" multiple webkitdirectory directory mozdirectory
+          class="form-control"
+          ref="fileInputFolder"
+          name="files"
+          @change="selectFiles"
+        >
+      </div>
+    </div>
+
+    <div v-if="files.length" class="mb-4">
+      <div class="accordion" id="filesAccordion">
+        <div class="accordion-item">
+          <h2 class="accordion-header" id="headingFiles">
+            <button class="accordion-button" :class="{ collapsed: !showFiles }" type="button" @click="showFiles = !showFiles">
+              [[ showFiles ? 'Hide' : 'Show' ]] staged files ([[ files.length ]])
+            </button>
+          </h2>
+          <div :id="'filesCollapse'" class="accordion-collapse collapse" :class="{ show: showFiles }" data-bs-parent="#filesAccordion">
+            <div class="accordion-body p-0">
+              <ul class="list-group list-group-flush">
+                <li v-for="(doc, index) in documents" :key="index" class="list-group-item">
+                  <div class="d-flex justify-content-between align-items-center">
+                    <span class="text-truncate" style="max-width: 65%">[[ doc.name ]]</span>
+                    <div class="btn-group btn-group-sm">
+                      <button class="btn btn-outline-primary" @click="togglePreview(index)">
+                        <i class="bi bi-eye"></i> Preview
+                      </button>
+                      <button class="btn btn-outline-danger" @click="removeFile(index)">
+                        <i class="bi bi-x-lg"></i> Remove
+                      </button>
+                    </div>
+                  </div>
+
+                  <!-- preview collapsible for text or images only -->
+                  <div v-if="previewStates[index]" class="mt-2">
+                    <div class="border rounded p-2">
+                      <img
+                        v-if="files[index].type.startsWith('image/')"
+                        :src="previewContents[index]"
+                        class="img-fluid"
+                        style="max-height: 400px"
+                      />
+                      <pre
+                        v-else-if="files[index].type.startsWith('text/')"
+                        style="max-height: 400px; overflow: auto"
+                        class="mb-0"
+                      >
+                        <code 
+                          :id="`preview-code-${index}`" 
+                          :class="`language-${getLanguageByExt(doc.name)}`"
+                        >[[ previewContents[index] ]]</code>
+                      </pre>
+                      <p v-else class="text-muted mb-0">No preview available for this file type.</p>
+                    </div>
+                  </div>
+                </li>
+              </ul>
+              <div class="border-top p-2 bg-light d-flex justify-content-end">
+                <button class="btn btn-sm btn-danger" @click="removeAllFiles">
+                  <i class="bi bi-trash"></i> Remove all
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="d-flex justify-content-end gap-2">
+      <button type="button" class="btn btn-primary" @click="commit">
+        <i class="bi bi-arrow-right"></i> Commit changes
+      </button>
+      <a class="btn btn-outline-danger" href="{% url 'repo_page' username=owner.username repo_name=repo.name %}">
+        Cancel
+      </a>
+    </div>
+
+    <div v-if="errors.size" class="mt-4">
+      <div v-for="[key, value] in errors.entries()" :key="key" class="alert alert-danger">
+        [[ value ]]
+      </div>
+    </div>
+  </div>
+</div>
+
+{% endblock %}
+
+
+{% block script %}
+
+  <script src="https://unpkg.com/vue@3"></script>
+  <script src="https://unpkg.com/axios/dist/axios.min.js"></script>
+  <script>
+    const { createApp } = Vue
+
+    createApp({
+      data() {
+        return {
+          errors: new Map(),
+          documents: [],
+          files: [],
+          showFiles: false,
+          previewStates: {},
+          previewContents: {},  // file index -> preview string or objectURL
+        }
+      },
+      delimiters: [ '[[', ']]' ],
+      methods: {
+        getLanguageByExt(file) {
+          const ext = file.split('.').pop()
+          if (ext == 'py')
+            return 'python'
+          else if (ext == 'cs')
+            return 'csharp'
+          else if (ext == 'cpp' || ext == 'h' || ext == 'hpp')
+            return 'cpp'
+          else if (ext == 'c')
+            return 'c'
+          else if (ext == 'cmake')
+            return 'cmake'
+          else if (ext == 'js')
+            return 'js'
+          return 'plaintext'
+        },
+        togglePreview(index) {
+          const file = this.files[index]
+          const isImage = file.type.startsWith('image/')
+          const isText = file.type.startsWith('text/')
+
+          this.previewStates[index] = !this.previewStates[index]  // flip-flop
+
+          if (!this.previewStates[index]) return
+
+          if (isImage) {
+            this.previewContents[index] = URL.createObjectURL(file)
+          } else if (isText) {
+            const reader = new FileReader()
+            reader.onload = () => {
+              this.previewContents[index] = reader.result
+              this.$nextTick(() => {
+                const el = this.$el.querySelector(`#preview-code-${index}`)
+                if (el) hljs.highlightElement(el)
+              })
+            }
+            reader.readAsText(file)
+          } else {
+            this.previewContents[index] = null
+          }
+        },
+        getPath(file) {
+          return file.webkitRelativePath || file.name
+        },
+        selectFiles(event) {
+          const newFiles = Array.from(event.target.files)
+
+          newFiles.forEach(file => {
+            const path = this.getPath(file)
+            if (!this.files.find(f => this.getPath(f) === path)) {
+              this.files.push(file)
+              this.documents.push({ name: path })
+            }
+          })
+
+          newFiles.forEach((file, index) => {
+            const path = this.getPath(file)
+            if (!this.files.find(f => this.getPath(f) === path)) {
+              this.files.push(file)
+              this.documents.push({ name: path })
+              const newIndex = this.documents.length - 1
+              this.previewStates[newIndex] = false
+            }
+          })
+
+          this.$refs.fileInputFiles.value = null
+          this.$refs.fileInputFolder.value = null
+        },
+        commit() {
+          this.runCommit()
+        },
+        runCommit() {
+          console.log('FILES', this.files)
+
+          let formData = new FormData()
+
+          // check errors
+          this.errors.clear()
+          if (!this.$refs.messageInput.value) this.errors.set('message', 'Commit message is required.')
+          if (this.files.length === 0)  this.errors.set('files', 'You must upload at least one file.')
+
+          if (this.errors.size != 0) return
+          
+          // if valid, continue
+          formData.append('message', this.$refs.messageInput.value)
+
+          this.files.forEach(file => {
+            const path = this.getPath(file)
+            formData.append('files', file, path)
+            formData.append('paths', path)
+          })
+
+          console.log('FORM BODY', formData);
+          // return
+
+          const endpoint = '/api/u/{{ owner.username }}/r/{{ repo.name }}/cnew'
+          axios.post(endpoint, formData, {
+            headers: {
+              'Content-Type': 'multipart/form-data',
+              'X-CSRFToken': '{{ csrf_token }}',
+            }
+          })
+          .then(response => {
+            const commit = response.data
+            const url = `/u/{{ owner.username }}/r/{{ repo.name }}/c/${commit.id}/`
+            window.location.href = url
+          })
+          .catch(error => {
+            console.error('Commit failed:', error)
+          })
+
+        },
+        removeFile(index) {
+          this.documents.splice(index, 1)
+          this.files.splice(index, 1)
+          if (this.files.length === 0) {
+            this.$refs.fileInputFiles.value = null
+            this.$refs.fileInputFolder.value = null
+          }
+        },
+        removeAllFiles() {
+          this.files.length = 0
+          this.documents.length = 0
+
+          this.$refs.fileInputFiles.value = null
+          this.$refs.fileInputFolder.value = null
+        }
+      },
+    }).mount('#app')
+
+  </script>
+
+{% endblock %}

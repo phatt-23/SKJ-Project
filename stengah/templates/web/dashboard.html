@@ -1,0 +1,172 @@
+{% extends 'web/layout.html' %}
+{% load filters %}
+
+{% block title %}Dashboard{% endblock %}
+
+{% block breadcrumbs %}
+<ol class="breadcrumb mb-0 bg-dark">
+  <li class="breadcrumb-item">
+    <a href="#">dashboard</a>
+  </li>
+</ol>
+{% endblock breadcrumbs %}
+
+{% block content %}
+
+<h2 class="display-4">Dashboard</h2>
+
+<hr class="mb-4">
+
+<div class="row row-cols-1 row-cols-lg-2">
+  <div class="col">
+
+    {# Your repositories #}
+
+    <div class="card mb-3 shadow-sm">
+      <div class="card-header">
+        Your repositories <span class="badge text-bg-success">{{ repos.count }}</span>
+      </div>
+        <ul class="list-group list-group-flush">
+          {% for repo in repos %}
+            <li class="list-group-item d-flex justify-content-between">
+              <div>
+                <a href="{% url 'repo_page' username=repo.owner.username repo_name=repo.name %}">{{ repo.name }}</a>
+                <div class="text-muted small">
+                  {{ repo.open_issues.count }} open issues
+                  &bull;
+                  {% if repo.last_commit %}
+                    last 
+                    <a 
+                      href="{% url 'repo_commit_detail' username=repo.owner.username repo_name=repo.name commit_id=repo.last_commit.id %}"
+                    >commited</a> 
+                    {{ repo.last_timestamp|last_updated_fmt }}
+                    by <a href="{% url 'user_page' username=repo.last_commit.author.username %}">@{{ repo.last_commit.author.username }}</a>
+                  {% else %}
+                    created {{ repo.last_timestamp|last_updated_fmt }}
+                  {% endif %}
+                </div>
+              </div>
+            </li>
+          {% empty %}
+            <li class="list-group-item text-muted fst-italic">No repositories.</li>
+          {% endfor %}
+        </ul>
+    </div>
+
+    {# recent commits #}
+
+    <div class="card mb-3 shadow-sm">
+      <div class="card-header">
+        Recent commits by you
+      </div>
+        <ul class="list-group list-group-flush">
+          {% for commit in my_recent_commits %}
+            <li class="list-group-item d-flex justify-content-between">
+              <div>
+                <div>
+                  <a 
+                    class="text-decoration-none fw-semibold me-2" 
+                    href="{% url 'repo_page' username=commit.repository.owner.username repo_name=commit.repository.name %}"
+                  >[{{ commit.repository.name }}]</a>
+                  &ndash;
+                  <a 
+                    class="text-decoration-none ms-2"
+                    href="{% url 'repo_commit_detail' username=commit.repository.owner.username repo_name=commit.repository.name commit_id=commit.id %}"
+                  >{{ commit.message }}</a>
+                </div>
+
+                <div class="text-muted small">
+                  commited {{ commit.timestamp|last_updated_fmt }} 
+                </div>
+              </div>
+              <div class="text-muted">
+                <i class="bi bi-file-code"></i> {{ commit.files.count }} {% if commit.files.count == 1 %}file{% else %}files{% endif %}
+              </div>
+            </li>
+          {% empty %}
+            <li class="list-group-item text-muted fst-italic">No recent commits.</li>
+          {% endfor %}
+        </ul>
+    </div>
+
+  </div> 
+  <div class="col">
+
+    {# Open issues on your repositories #}
+
+    <div class="card mb-3 shadow-sm">
+      <div class="card-header">
+        Open issues on your repositories <span class="badge text-bg-warning">{{ my_repos_open_issues.count }} open</span>
+      </div>
+        <ul class="list-group list-group-flush">
+          {% for issue in my_repos_open_issues %}
+            <li class="list-group-item d-flex justify-content-between">
+              <div>
+                <a 
+                  href="{% url 'repo_issue_detail' username=issue.repository.owner.username repo_name=issue.repository.name issue_id=issue.id %}"
+                >#{{ issue.id }}</a>
+                {{ issue.title }}
+                <div class="text-muted small">in 
+                  <a 
+                    href="{% url 'repo_page' username=issue.repository.owner.username repo_name=issue.repository.name %}"
+                  >{{ issue.repository.name }}</a> 
+                  &bull; opened {{ issue.last_active_prop|last_updated_fmt }} by 
+                  <a 
+                    href="{% url 'user_page' username=issue.created_by.username %}"
+                  >@{{ issue.created_by.username }}</a> 
+                </div>
+              </div>
+            </li>
+          {% empty %}
+            <li class="list-group-item text-muted fst-italic">No issues.</li>
+          {% endfor %}
+        </ul>
+    </div>
+
+
+    {# Your issues (open and closed) #}
+
+    <div class="card mb-3 shadow-sm">
+      <div class="card-header">
+        Issues created by you
+        <span class="ms-1 badge text-bg-warning">{{ my_open_issues.count }} open</span>
+        <span class="badge text-bg-success">{{ my_closed_issues.count }} closed</span>
+      </div>
+        <ul class="list-group list-group-flush">
+          {% for issue in my_issues %}
+            <li class="list-group-item d-flex justify-content-between">
+              <div>
+                <a 
+                  href="{% url 'repo_issue_detail' username=issue.repository.owner.username repo_name=issue.repository.name issue_id=issue.id %}"
+                >#{{ issue.id }}</a>
+                {{ issue.title }}
+                <div class="text-muted small">in 
+                <a 
+                  href="{% url 'user_page' username=issue.repository.owner.username %}"
+                >{{ issue.repository.owner.username }}</a>/<a 
+                  href="{% url 'repo_page' username=issue.repository.owner.username repo_name=issue.repository.name %}"
+                >{{ issue.repository.name }}</a> 
+                  &bull; 
+                  opened
+                  {{ issue.last_active_prop|last_updated_fmt }}
+                </div>
+              </div>
+              <div class="d-flex align-items-center">
+                <p class="m-0 h5">
+                  <span class="badge text-bg-{{ issue.is_open|yesno:"warning,success" }}">
+                    <i class="bi {{ issue.is_open|yesno:"bi-circle,bi-check-circle" }} me-1"></i>
+                    {{ issue.status }}
+                  </span>
+                </p>
+              </div>
+            </li>
+          {% empty %}
+            <li class="list-group-item text-muted fst-italic">No issues.</li>
+          {% endfor %}
+        </ul>
+    </div>
+
+  </div>
+</div>
+
+{% endblock %}

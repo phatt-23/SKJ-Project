@@ -1,0 +1,56 @@
+{% extends 'web/layout.html' %}
+
+{% block title %}
+    Create Repo
+{% endblock %}
+
+{% block content %}
+
+
+<form method="POST"
+  class="card p-4 shadow-sm mx-auto" 
+  style="max-width: 600px;"
+>
+  {% csrf_token %} 
+
+  <h2 class="mb-4">Create a new repository</h2>
+
+  <div class="form-floating mb-3">
+    <input type="text" class="form-control" name="name" placeholder="Enter repository name" required>
+    <label for="name" class="form-label">Repository name</label>
+  </div>
+
+  <div class="form-floating mb-3">
+    <textarea class="form-control" name="description" style="height: 120px;" placeholder="Enter description"></textarea>
+    <label for="description" class="form-label">Description (optional)</label>
+  </div>
+
+  <div class="form-group mb-3">
+    <div class="form-check">
+      <input class="form-check-input" type="radio" name="visibility" id="vis_public" value="public" checked>
+      <label class="form-check-label" for="vis_public">
+        Public <p class="text-sm text-muted"><small>Anyone on the internet can see this repository.</small></p>
+      </label>
+    </div>
+    <div class="form-check">
+      <input class="form-check-input" type="radio" name="visibility" id="vis_private" value="private">
+      <label class="form-check-label" for="vis_private">
+        Private <p class="text-muted"><small>Only you can see this repository.</small></p>
+      </label>
+    </div>
+  </div>
+
+  <div class="d-flex justify-content-end">
+    <button type="submit" class="btn btn-primary">Create repository</button>
+  </div>
+</form>
+
+{% if messages %}
+  <div class="mt-2">
+  {% for message in messages %}
+    <div class="alert alert-danger">{{ message }}</div>
+  {% endfor %}
+  </div>
+{% endif %}
+
+{% endblock %}

@@ -1,0 +1,108 @@
+{% extends 'web/layout.html' %}
+{% load filters %}
+
+{% block title %}Search{% endblock %}
+
+{% block breadcrumbs %}
+
+{% endblock %}
+
+{% block content %}
+
+<h2>Search</h2>
+
+<form method="get" action="{% url 'search' %}" role="search">
+  <div class="row">
+    <div class="col-sm-8">
+      <div class="form-floating">
+        <input type="text" name="q" value="{{ query }}" class="form-control col-sm" placeholder/>
+        <label for="q">Search for users and repositories</label>
+      </div>
+    </div>
+    <div class="col-sm-2">
+      <button type="button" id="filterDrowdown" data-bs-toggle="dropdown"
+        class="dropdown-toggle form-control btn btn-outline-secondary text-start p-3"
+      >
+        Search 
+      </button>
+      <ul class="dropdown-menu" aria-labelledby="filterDrowdown">
+        <li><span class="dropdown-item-text">Select search</span></li>
+        <li><hr class="dropdown-divider"></li>
+        <li><button class="dropdown-item" type="submit" name="s" value="" checked>Users & Repositories</button></li>
+        <li><button class="dropdown-item" type="submit" name="s" value="users">Users</button></li>
+        <li><button class="dropdown-item" type="submit" name="s" value="repos">Repositories</button></li>
+      </ul>
+    </div>
+    <button type="submit" class="btn btn-primary col-sm-2">Go</button>
+  </div>
+</form>
+
+{% if query %}
+  <h3 class="my-4">Users</h3>
+
+  {% if users %}
+    <div class="row row-cols-1 row-cols-md-2 g-4">
+    {% for user in users %}
+      <div class="col">
+        <div class="card"> 
+          <div class="card-body">
+            <div class="row align-items-center">
+              <div class="col-12 col-md-auto text-center mb-3 mb-md-0">
+                <img src="{{ user|avatar_url }}" class="rounded-circle object-fit-cover" alt="Avatar" width="90" height="90">
+              </div>
+              
+              <div class="col">
+                <h5 class="card-title mb-1">
+                  <a class="text-decoration-none" href="{% url 'user_page' username=user.username %}">
+                    {{ user.username }}
+                  </a>
+                </h5>
+                <p class="card-text mb-0">{{ user.bio|default:"No bio provided." }}</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    {% endfor %}
+    </div>
+  {% else %}
+    <p class="text-muted">No users were found.</p>
+  {% endif %}
+
+  <hr class="my-4">
+
+  <h3 class="my-4">Repositories</h3>
+  {% if repos %}
+    <div class="row row-cols-1 row-cols-md-2 g-4">
+    {% for repo in repos %}
+      <div class="col">
+        <div class="card"> 
+          <div class="card-body">
+            <h5 class="card-title">
+              <a 
+                class="text-decoration-none" 
+                href="{% url 'repo_page' username=repo.owner.username repo_name=repo.name %}"
+              >
+                {{ repo.name }}
+              </a>
+            </h5>
+            <h6 class="card-subtitle mb-2 text-body-secondary">
+              <a
+                class="text-decoration-none text-muted"
+                href="{% url 'user_page' username=repo.owner.username %}"
+              >
+                {{ repo.owner.username }}
+              </a>
+            </h6>
+            <p class="card-text">{{ repo.description|default:"No description provided." }}</p>
+          </div>
+        </div>
+      </div>
+    {% endfor %} 
+  {% else %}
+    <p class="text-muted">No repositories were found.</p>
+  {% endif %}
+
+{% endif %}
+
+{% endblock %}

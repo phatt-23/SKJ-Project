@@ -1,0 +1,172 @@
+{% extends 'web/layout.html' %}
+{% load filters %}
+
+{% block title %}
+  {{ owner.username }}/{{ repo.name }} - Issue Detail
+{% endblock %}
+
+{% block breadcrumbs %}
+<ol class="breadcrumb mb-0 bg-dark">
+  <li class="breadcrumb-item">
+    <a href="{% url 'user_page' username=owner.username %}">{{ owner.username }}</a>
+  </li>
+  <li class="breadcrumb-item">
+    <a href="{% url 'user_repo_list' username=owner.username %}">repos</a>
+  </li>
+  <li class="breadcrumb-item">
+    <a href="{% url 'repo_page' username=owner.username repo_name=repo.name %}">{{ repo.name }}</a>
+  </li>
+  <li class="breadcrumb-item">
+    <a href="{% url 'repo_issue_list' username=owner.username repo_name=repo.name %}">issues</a>
+  </li>
+  <li class="breadcrumb-item active">
+    <a href="#">{{ issue.id }}</a>
+  </li>
+</ol>
+{% endblock %}
+
+{% block content %}
+<div id="app">
+  <h2><strong>#{{ issue.id }}</strong> {{ issue.title }}</h2>
+  
+  <h4>
+    <span class="badge {{ issue.is_open|yesno:"text-bg-warning,text-bg-success" }}">
+      <i class="bi {% if issue.is_open %}bi-circle{% else %}bi-check-circle{% endif %} me-1"></i> 
+      {{ issue.status }}
+    </span>
+  </h4>
+  
+  <div class="card">
+    <div class="card-header d-flex justify-content-between">
+      <div>
+      <a class="text-decoration-none " href="{% url 'user_page' username=issue.created_by.username %}">
+        {{ issue.created_by.username }} 
+      </a>
+      {% if issue.status == 'open' %}
+        opened {{ issue.created_at|last_updated_fmt }}
+      {% else %}
+        closed {{ issue.closed_at|last_updated_fmt }}
+      {% endif %}
+      </div>
+      <div>
+        <i class="bi bi-chat-left-quote me-2"></i>
+        {{ comments.count }} {% if comments.count == 1 %}comment{% else %}comments{% endif %} 
+      </div>
+    </div>
+    <div class="card-body">
+      {{ issue.description }}
+    </div>
+  </div>
+  
+  
+  <div>
+    {% if comments %}
+      <hr>
+      <ul class="list-group list-group-flush">
+        {% for comment in comments %}
+          <li class="list-group-item">
+            <div class="my-4 row">
+              <div class="col-sm-1 d-flex justify-content-end">
+                <img src="{{ comment.author|avatar_url }}" 
+                  class="rounded-circle object-fit-cover" 
+                  alt="Avatar" width="60" height="60" 
+                > 
+              </div>
+              <div class="col-sm-11">
+                <div class="card">
+                  <div class="card-header d-flex justify-content-between">
+                    <span>
+                      <a class="text-decoration-none" href="{% url 'user_page' username=comment.author.username %}">
+                        {{ comment.author.username }}
+                      </a>
+                      commented {{ comment.created_at|last_updated_fmt }}
+                    </span>
+                    {% if issue.closing_comment.id == comment.id %}
+                      <span class="badge text-bg-success">Closed</span>
+                    {% endif %}
+                  </div>
+                  <div class="card-body">
+                    {{ comment.content|linebreaks }} 
+                  </div>
+                </div>
+              </div>
+            </div>
+          </li>
+      {% endfor %}
+      </ul>
+      <hr>
+    {% else %}
+      <p class="alert alert-info mt-3">There are no comments.<p>
+    {% endif %}
+  </div>
+
+  <form method="POST" class="card p-4">
+    {% csrf_token %} 
+    <div class="row">
+      <div class="col-sm-2 d-flex justify-content-center pt-2">
+        <img src="{{ user|avatar_url }}" 
+          class="rounded-circle object-fit-cover" 
+          alt="Avatar" width="120" height="120"
+        > 
+      </div>
+      <div class="col-sm-10">
+        <h4 class="mb-4">
+          Add a comment
+        </h4>
+
+        <div class="form-floating mb-2">
+          <textarea ref="commentText" @input="commentChange" name="content" class="form-control" style="height: 120px;" placeholder></textarea>
+          <label for="content" class="form-label">What would you like to say?</label>
+        </div>
+        <div class="d-flex justify-content-end gap-2">
+          <button type="submit" 
+            name="action" value="close" 
+            class="btn btn-outline-primary" 
+            {% if not issue.is_open or not user.username == issue.created_by.username and not user.username == issue.repository.owner.username %}
+              disabled
+            {% endif %}
+          >
+            <i class="bi bi-check-circle me-1"></i> Close issue <span v-if="commentHasText">with a comment</span>
+          </button>
+          <button type="submit" 
+            name="action" value="comment"
+            class="btn btn-primary" 
+            :disabled="!commentHasText"
+          >
+            <i class="bi bi-chat-left-quote me-1"></i> Comment
+          </button>
+        </div>
+      </div>
+    </div>
+  </form>
+</div>
+{% endblock %}
+
+{% block script %}
+  <script src="https://unpkg.com/vue@3"></script>
+  <script src="https://unpkg.com/axios/dist/axios.min.js"></script>
+  <script>
+    const { createApp } = Vue
+
+    createApp({
+      data() {
+        return {
+          commentHasText: false,
+        }
+      },
+      delimiters: [ '[[', ']]' ],
+      methods: {
+        commentChange(event) {
+          console.log(event.target.value)
+          if (event.target.value) {
+            this.commentHasText = true
+          } else {
+            this.commentHasText = false
+          }
+          console.log('comment has text', this.commentHasText)
+        },
+      },
+    }).mount('#app')
+     
+  </script>
+{% endblock %}

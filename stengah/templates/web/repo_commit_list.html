@@ -1,0 +1,116 @@
+{% extends 'web/layout.html' %}
+{% load filters %}
+
+{% block title %}
+  {{ repo.owner.username }}/{{ repo.name }} - Commits
+{% endblock %}
+
+{% block breadcrumbs %}
+<ol class="breadcrumb mb-0 bg-dark">
+  <li class="breadcrumb-item">
+    <a href="{% url 'user_page' username=repo.owner.username %}">{{ repo.owner.username }}</a>
+  </li>
+  <li class="breadcrumb-item">
+    <a href="{% url 'user_repo_list' username=repo.owner.username %}">repos</a>
+  </li>
+  <li class="breadcrumb-item">
+    <a href="{% url 'repo_page' username=repo.owner.username repo_name=repo.name %}">{{ repo.name }}</a>
+  </li>
+  <li class="breadcrumb-item active">
+    <a href="#">commits</a>
+  </li>
+</ol>
+{% endblock %}
+
+{% block content %}
+
+<h2 class="mb-4">Commit history for {{ repo.owner.username }}/{{ repo.name }}</h2>
+
+<div class="row mb-4">
+  <form 
+    method="GET" 
+    role="search" 
+    class="{{ user.is_authenticated|yesno:"col-sm-9,col-sm-12" }}"
+  >
+    <div class="row g-2">
+      <div class="col-md-8">
+        <div class="form-floating">
+          <input name="q" value="{{ query }}" id="q" type="text" class="form-control" placeholder="Search commits...">
+          <label for="q">Search commits...</label>
+        </div>
+      </div>
+
+      <div class="col-sm-2">
+        <button type="button" data-bs-toggle="dropdown"
+          class="dropdown-toggle form-control btn btn-outline-secondary text-start p-3"
+        >
+          Order by
+        </button>
+        <ul class="dropdown-menu">
+          <li><span class="dropdown-item-text">Order by</span></li>
+          <li><hr class="dropdown-divider"></li>
+          <li><button class="dropdown-item" type="submit" name="order_by" value="timestamp">Timestamp</button></li>
+          <li><button class="dropdown-item" type="submit" name="order_by" value="author">Author</button></li>
+        </ul>
+      </div>
+
+      <div class="col-sm-2">
+        <button type="button" data-bs-toggle="dropdown"
+          class="dropdown-toggle form-control btn btn-outline-secondary text-start p-3"
+        >
+          Sort
+        </button>
+        <ul class="dropdown-menu">
+          <li><span class="dropdown-item-text">Sort direction</span></li>
+          <li><hr class="dropdown-divider"></li>
+          <li><button class="dropdown-item" type="submit" name="sort" value="asc">Ascending</button></li>
+          <li><button class="dropdown-item" type="submit" name="sort" value="desc">Descending</button></li>
+        </ul>
+      </div>
+    </div>
+  </form>
+  {% if user.is_authenticated %}
+    <div class="col-sm-3 text-md-end">
+      <a href="{% url 'repo_commit_create' username=owner.username repo_name=repo.name %}" class="btn btn-success w-100 p-3 text-nowrap">
+        <i class="bi bi-plus-lg me-1"></i> Make commit
+      </a>
+    </div>
+  {% endif %}
+</div>
+
+<hr class="mt-4">
+
+<ul class="list-group list-group-flush">
+  {% for commit in commits %}
+    <li class="list-group-item d-flex justify-content-between">
+      <div>
+        <h5 class="mb-1">
+          <a 
+            href="{% url 'repo_commit_detail' username=repo.owner.username repo_name=repo.name commit_id=commit.id %}" 
+            class="text-decoration-none"
+          >
+            {{ commit.message }}
+          </a>
+        </h5>
+        <small class="text-muted">
+          <a class="text-decoration-none" href="{% url 'user_page' username=commit.author.username %}">
+            {{ commit.author.username }}
+          </a>
+          committed {{ commit.timestamp|last_updated_fmt }} <span>({{ commit.timestamp }})</span>
+        </small>
+      </div>
+      <div class="d-flex align-items-center">
+        <span>
+          <i class="bi bi-file-code"></i> 
+          {{ commit.files.count }} 
+          {% if commit.files.count == 1 %}file{% else %}files{% endif %}
+        </span>
+      </div>
+    </li>
+  {% empty %}
+    <p class="alert alert-info">No commits found.</p>
+  {% endfor %}
+</ul>
+
+{% endblock %}
+

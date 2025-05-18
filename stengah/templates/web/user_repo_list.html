@@ -1,0 +1,113 @@
+{% extends 'web/layout.html' %}
+{% load filters %}
+
+{% block title %}{% endblock %}
+
+{% block breadcrumbs %}
+<ol class="breadcrumb mb-0 bg-dark">
+  <li class="breadcrumb-item">
+    <a href="{% url 'user_page' username=owner.username %}">{{ owner.username }}</a>
+  </li>
+  <li class="breadcrumb-item active">
+    <a href="#">repos</a>
+  </li>
+</ol>
+{% endblock breadcrumbs %}
+
+{% block content %}
+
+<div class="row mb-4">
+  <form method="GET" role="search" class="{{ is_my_page|yesno:"col-sm-9,col-sm-12" }}">
+    <div class="row g-2">
+      <div class="col-md-8">
+        <div class="form-floating">
+          <input name="q" value="{{ query }}" id="q" type="text" class="form-control" placeholder="Search">
+          <label for="q">Find a repository...</label>
+        </div>
+      </div>
+    
+      <div class="col-sm-2">
+        <button type="button" id="sortDropdown" data-bs-toggle="dropdown"
+          class="dropdown-toggle form-control btn btn-outline-secondary text-start p-3"
+        >
+          Order by 
+        </button>
+        <ul class="dropdown-menu" aria-labelledby="sortDropdown">
+          <li><span class="dropdown-item-text">Select order</span></li>
+          <li><hr class="dropdown-divider"></li>
+          <li><button class="dropdown-item" type="submit" name="order_by" value="created_at">Last updated</button></li>
+          <li>
+            <button class="dropdown-item" type="submit" name="order_by" value="name">Name</button>
+          </li>
+        </ul>
+      </div>
+
+      <div class="col-sm-2">
+        <button type="button" id="sortDropdown" data-bs-toggle="dropdown"
+          class="dropdown-toggle form-control btn btn-outline-secondary text-start p-3"
+        >
+          Sort 
+        </button>
+        <ul class="dropdown-menu" aria-labelledby="sortDropdown">
+          <li><span class="dropdown-item-text">Select order</span></li>
+          <li><hr class="dropdown-divider"></li>
+          <li><button class="dropdown-item" type="submit" name="sort" value="asc">Ascending</button></li>
+          <li>
+            <button class="dropdown-item" type="submit" name="sort" value="desc">Descending</button>
+          </li>
+        </ul>
+      </div>
+    </div>
+  </form>
+  {% if is_my_page %}
+    <div class="col-sm-3 text-md-end">
+      <a href="{% url 'repo_create' %}" class="btn btn-success w-100 p-3">
+        <i class="bi bi-plus-lg me-1"></i> Add Repository
+      </a>
+    </div>
+  {% endif %}
+</div>
+
+<hr class="my-4">
+
+{% for repo in repos %}
+  <div class="container">
+    <h5>
+        <a href="{% url 'repo_page' username=owner.username repo_name=repo.name %}"
+          class="text-decoration-none me-2"
+        >
+          {{ repo.name }}
+        </a>
+        <span 
+          class="badge {% if repo.is_public %}bg-success{% else %}bg-secondary{% endif %}"
+        >
+          {% if repo.is_public %}Public{% else %}Private{% endif %}
+        </span>
+    </h5>
+    <p>
+      {{ repo.description }} 
+
+      <div class="text-muted small">
+        {{ repo.open_issues.count }} open 
+        <a 
+          href="{% url 'repo_issue_list' username=repo.owner.username repo_name=repo.name %}"
+        >{% if repo.open_issues.count == 1 %}issue{% else %}issues{% endif %}</a>
+        &bull;
+        {% if repo.last_commit %}
+          last 
+          <a href="{% url 'repo_commit_detail' username=repo.owner.username repo_name=repo.name commit_id=repo.last_commit.id %}">
+            commited
+          </a> 
+          {{ repo.last_timestamp|last_updated_fmt }}
+        {% else %}
+          created {{ repo.last_timestamp|last_updated_fmt }}
+        {% endif %}
+      </div>
+    </p>
+  </div>
+  <hr class="my-4">
+{% empty %}
+  <p class="alert alert-info">No repositories found.</p>
+{% endfor %}
+
+{% endblock %}

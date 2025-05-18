@@ -1,0 +1,184 @@
+{% extends 'web/layout.html' %}
+{% load filters %}
+
+{% block title %}
+  {{ owner.username }}/{{ repo.name }}
+{% endblock %}
+
+{% block breadcrumbs %}
+<ol class="breadcrumb mb-0 bg-dark">
+  <li class="breadcrumb-item">
+    <a href="{% url 'user_page' username=owner.username %}">{{ owner.username }}</a>
+  </li>
+  <li class="breadcrumb-item">
+    <a href="{% url 'user_repo_list' username=owner.username %}">repos</a>
+  </li>
+
+  <li class="breadcrumb-item active">
+    <a href="#">{{ repo.name }}</a>
+  </li>
+</ol>
+{% endblock breadcrumbs %}
+
+{% block content %}
+
+<div class="row">
+
+{# left block #}
+<div class="col-lg-8">
+  <div>
+    <div class="d-block d-lg-flex align-items-center justify-content-between">
+      <span class="d-block d-md-flex align-items-center me-2">
+        <h2 class="display-4 me-2 text-nowrap">{{ repo.name }}</h2>
+        <h4>
+          <span class="badge {% if repo.is_public %}bg-success{% else %}bg-secondary{% endif %}">
+            {% if repo.is_public %}Public{% else %}Private{% endif %}
+          </span>
+        </h4>
+      </span>
+      {% if is_my_page %}
+        <div class="d-flex gap-2">
+          <a href="{% url 'repo_edit_page' username=user.username repo_name=repo.name %}" 
+            class="btn btn-outline-secondary text-nowrap"
+          >
+            Edit repository 
+          </a>
+
+          <a href="{% url 'repo_delete_page' username=user.username repo_name=repo.name %}" 
+            class="btn btn-outline-danger text-nowrap"
+          >
+            Remove repository 
+          </a>
+        </div>
+      {% endif %}
+    </div>
+
+    <p class="lead">
+      {{ repo.description }}
+    </p>
+  </div>
+
+  <hr class="my-4">
+
+  <div class="card">
+    <div class="card-header">
+       Tree 
+    </div>
+    <div class="card-body p-0">
+      <ul class="list-group list-group-flush">
+        {% for file in files %}
+          <li class="list-group-item {% if forloop.last %}mb-1{% endif %}">
+            <span class="row">
+              <span class="text-truncate col-sm-6" style="max-width: 50%">
+                <a 
+                  class="text-decoration-none me-2" type="button" 
+                  data-bs-toggle="collapse" data-bs-target="#file-content-{{ forloop.counter0 }}"
+                >
+                  {{ file.path }}
+                </a>
+              </span>
+              <span class="col-sm-3">
+                <a 
+                  class="text-decoration-none text-body-secondary"
+                  href="{% url 'repo_commit_detail' username=owner.username repo_name=repo.name commit_id=file.commit.id %}"
+                >
+                  {{ file.commit.message }}
+                </a>
+              </span>
+              <span class="col-sm-3 text-end text-body-secondary">{{ file.commit.timestamp|last_updated_fmt }}</span>
+              <!-- <span class="text-muted"><small>{{ file.size_kb|floatformat:2 }} KB ({{ file.size_bytes }} bytes)</small></span> -->
+            </span>
+            <div class="collapse mt-2" id="file-content-{{ forloop.counter0 }}">
+              <div class="card card-body"><pre><code class="language-{{ file.path|language_by_ext }}">{{ file.content }}</code></pre></div>
+            </div>
+          </li> 
+        {% empty %}
+            <li class="list-group-item mb-1"></li>
+        {% endfor %}
+      </ul>
+    </div>
+  </div>
+</div>
+
+{# right block #}
+  <div class="col-lg-4 mt-4 mt-lg-0">
+
+    {# issues #}
+    <div class="card mb-4">
+      <div class="card-header d-flex justify-content-between align-items-center text-align-center">
+        <div class="my-auto">
+          <a href="{% url 'repo_issue_list' username=owner.username repo_name=repo.name %}" class="text-decoration-none">
+            Issues <span class="badge rounded-pill text-bg-warning">{{ total_issues }}</span>
+          </a>
+          <br>
+          <small>Most recent open issues</small>
+        </div>
+        {% if user.is_authenticated %}
+          <a class="btn btn-sm btn-primary" href="{% url 'repo_issue_create' username=repo.owner.username repo_name=repo.name %}">
+            Open issue 
+          </a>
+        {% endif %}
+      </div>
+      <div class="card-body p-0">
+        <ul class="list-group list-group-flush">
+          {% for issue in issues %}
+            <li class="list-group-item {% if forloop.last %}mb-1{% endif %}">
+              <a href="{% url 'repo_issue_detail' username=owner.username repo_name=repo.name issue_id=issue.id %}"
+                class="text-decoration-none"
+              >
+                {{ issue.title }} <p class="text-muted m-0">{{ issue.created_by.username }}</p>
+              </a>
+            </li>
+          {% empty %}
+            <li class="list-group-item my-1">No issues</li>
+          {% endfor %}
+        </ul>
+      </div>
+    </div>
+    
+    {# commits #}
+    <div class="card"> 
+      <div class="card-header d-flex justify-content-between align-items-center text-align-center">
+        <div class="my-auto">
+          <a href="{% url 'repo_commit_list' username=owner.username repo_name=repo.name %}" class="text-decoration-none">
+            Commits 
+            <span class="badge rounded-pill bg-success">
+              {{ total_commits }} 
+            </span>
+          </a>
+          <br>
+          <small>Most recent commits</small>
+        </div>
+        {% if is_my_page %}
+          <a class="btn btn-sm btn-primary" href="{% url 'repo_commit_create' username=repo.owner.username repo_name=repo.name %}">
+            Make a commit
+          </a>
+        {% endif %}
+      </div>
+      <div class="card-body p-0">
+        <ul class="list-group list-group-flush">
+          {% for commit in commits %}
+            <li class="list-group-item {% if forloop.last %}mb-1{% endif %}">
+              <a href="{% url 'repo_commit_detail' username=owner.username repo_name=repo.name commit_id=commit.id %}"
+                class="text-decoration-none"
+              >
+                {{ commit.message }} <p class="text-muted m-0">{{ commit.timestamp }}</p>
+              </a>
+            </li>
+          {% empty %}
+            <li class="list-group-item my-1">No commits yet</li>
+          {% endfor %}
+        </ul>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+{% endblock %}
+
+{% block script %}
+  <script>
+    hljs.highlightAll()
+  </script>
+{% endblock %}
